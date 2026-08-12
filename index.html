@@ -55,7 +55,7 @@
 
     async function yukle() {
       const container = document.getElementById('app-list');
-      const { data: apps, error } = await db.from('AppDB').select('*');
+      const { data: apps, error } = await db.from('AppDB').select('*').order('created_at', { ascending: false });
 
       if (error) {
         container.innerHTML = `<div class="status-msg">Hata: ${error.message}</div>`;
@@ -90,10 +90,11 @@
                   <span class="meta-label">Paket Adı:</span>
                   <code>${app.package_name || 'Belirtilmedi'}</code>
                 </div>
+                ${app.sha256_hash ? `
                 <div class="meta-item">
                   <span class="meta-label">SHA-256 İmzası:</span>
-                  <span class="hash-code">${app.sha256_hash || 'Yok'}</span>
-                </div>
+                  <span class="hash-code">${app.sha256_hash}</span>
+                </div>` : ''}
               </div>
             </div>
 

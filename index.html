@@ -3,19 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ExpressDroid - APK Mağazası</title>
+  <title>ExpressDroid Store</title>
   
   <!-- Supabase JS Kütüphanesi -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+
   <style>
     :root {
-      --bg-color: #121212;
-      --card-bg: #1e1e1e;
-      --accent-color: #00e676;
-      --text-main: #ffffff;
-      --text-muted: #aaaaaa;
-      --border-color: #333333;
+      --bg: #0f1117;
+      --card-bg: #161b22;
+      --accent: #00e676;
+      --text: #f0f6fc;
+      --muted: #8b949e;
+      --border: #30363d;
+      --code-bg: #0d1117;
     }
 
     * {
@@ -26,9 +27,14 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
+      background-color: var(--bg);
+      color: var(--text);
       padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
     }
 
     header {
@@ -38,27 +44,22 @@
     }
 
     header h1 {
-      color: var(--accent-color);
-      font-size: 2rem;
-      letter-spacing: 1px;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
+      color: var(--accent);
+      font-size: 2.2rem;
+      letter-spacing: 0.5px;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 20px;
     }
 
     .card {
       background: var(--card-bg);
+      border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 18px;
-      border: 1px solid var(--border-color);
+      padding: 20px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -67,73 +68,87 @@
 
     .card:hover {
       transform: translateY(-3px);
-      border-color: var(--accent-color);
+      border-color: var(--accent);
     }
 
-    .card-header {
+    .card-top {
       display: flex;
+      gap: 15px;
       align-items: center;
-      gap: 12px;
       margin-bottom: 12px;
     }
 
-    .card-header img {
-      width: 56px;
-      height: 56px;
-      border-radius: 10px;
+    .app-icon {
+      width: 60px;
+      height: 60px;
+      flex-shrink: 0;
+      border-radius: 12px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
       object-fit: cover;
-      background-color: #2a2a2a;
     }
 
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 4px;
+    .app-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #ffffff;
     }
 
-    .card-meta {
-      font-size: 0.8rem;
-      color: var(--text-muted);
+    .dev-name {
+      font-size: 0.85rem;
+      color: var(--accent);
+      margin-top: 2px;
     }
 
-    .card-desc {
-      color: #cccccc;
+    .app-desc {
       font-size: 0.88rem;
+      color: #c9d1d9;
       line-height: 1.4;
       margin-bottom: 15px;
-      flex-grow: 1;
+      white-space: pre-line;
     }
 
-    .badge-shield {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(0, 230, 118, 0.1);
-      color: var(--accent-color);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      border: 1px solid var(--accent-color);
+    .meta-group {
+      background: var(--code-bg);
+      border-radius: 8px;
+      padding: 10px;
       margin-bottom: 15px;
-      width: fit-content;
+      border: 1px solid #21262d;
     }
 
-    .badge-pending {
-      color: #ffb74d;
-      border-color: #ffb74d;
-      background: rgba(255, 183, 77, 0.1);
+    .meta-item {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      word-break: break-all;
+    }
+
+    .meta-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .meta-label {
+      color: #c9d1d9;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .hash-code {
+      font-family: monospace;
+      font-size: 0.72rem;
+      color: #79c0ff;
     }
 
     .download-btn {
       display: block;
-      text-align: center;
-      background: var(--accent-color);
+      background: var(--accent);
       color: #000000;
-      font-weight: 700;
-      text-decoration: none;
+      text-align: center;
       padding: 10px;
       border-radius: 8px;
+      font-weight: bold;
+      text-decoration: none;
       transition: opacity 0.2s;
     }
 
@@ -143,10 +158,10 @@
 
     .status-msg {
       text-align: center;
-      grid-column: 1 / -1;
       padding: 40px;
-      color: var(--text-muted);
-      font-size: 1.1rem;
+      color: var(--muted);
+      grid-column: 1 / -1;
+      font-size: 1rem;
     }
   </style>
 </head>
@@ -154,7 +169,7 @@
 
   <div class="container">
     <header>
-      <h1>ExpressDroid</h1>
+      <h1>ExpressDroid Store</h1>
     </header>
 
     <main id="app-list" class="grid">
@@ -164,15 +179,15 @@
 
   <script>
     // Supabase Bağlantı Bilgileri
-    const SUPABASE_URL = 'https://wdsfnygfsigugkaxpvka.supabase.co/rest/v1/';
-    const SUPABASE_ANON_KEY = 'sb_publishable_imHucyg80qgs-Tj8pu52BA_FYBUGpZX';
+    const SUPABASE_URL = 'https://wdsfnygfsigugkaxpvka.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_BURAYA_KEYI_YAZ';
 
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Verileri Veritabanından Çeken Fonksiyon
-    async function uygulamalariYukle() {
+    // Veritabanından Verileri Çeken Fonksiyon
+    async function yukle() {
       const container = document.getElementById('app-list');
-
+      
       const { data: apps, error } = await supabase
         .from('AppDB')
         .select('*')
@@ -180,54 +195,61 @@
 
       if (error) {
         console.error('Veri çekme hatası:', error);
-        container.innerHTML = `<div class="status-msg">Veriler yüklenirken hata oluştu: ${error.message}</div>`;
+        container.innerHTML = `<div class="status-msg">Hata oluştu: ${error.message}</div>`;
         return;
       }
 
       if (!apps || apps.length === 0) {
-        container.innerHTML = '<div class="status-msg">Henüz hiç uygulama eklenmemiş.</div>';
+        container.innerHTML = '<div class="status-msg">Henüz yayınlanmış bir uygulama bulunmuyor.</div>';
         return;
       }
 
       container.innerHTML = '';
 
       apps.forEach(app => {
-        const shieldBadge = app.shield_status 
-          ? `<div class="badge-shield">🛡️ ExpressDroid Shield™ Onaylı</div>`
-          : `<div class="badge-shield badge-pending">⏳ Taramada</div>`;
-
-        const cardHTML = `
+        const iconUrl = app.icon_url || 'https://via.placeholder.com/60';
+        
+        container.innerHTML += `
           <article class="card">
             <div>
-              <div class="card-header">
-                <img src="${app.icon_url || 'https://via.placeholder.com/60'}" alt="${app.title}">
+              <div class="card-top">
+                <img src="${iconUrl}" class="app-icon" alt="${app.title || 'Uygulama'} Logosu" />
                 <div>
-                  <h2 class="card-title">${app.title}</h2>
-                  <div class="card-meta">v${app.version || '1.0'} • ${app.category || 'Genel'}</div>
+                  <h2 class="app-title">${app.title || 'İsimsiz Uygulama'}</h2>
+                  <div class="dev-name">Resmî Geliştirici Adı: ${app.developer_name || 'Bilinmiyor'}</div>
                 </div>
               </div>
-              <p class="card-desc">${app.description || 'Açıklama bulunmuyor.'}</p>
+
+              ${app.description ? `<p class="app-desc">${app.description}</p>` : ''}
+
+              <div class="meta-group">
+                <div class="meta-item">
+                  <span class="meta-label">Paket Adı:</span>
+                  <code>${app.package_name || 'Belirtilmedi'}</code>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">SHA-256 İmzası:</span>
+                  <span class="hash-code">${app.sha256_hash || 'Yok'}</span>
+                </div>
+              </div>
             </div>
-            <div>
-              ${shieldBadge}
-              <a href="${app.apk_url}" class="download-btn" target="_blank" rel="noopener noreferrer">İndir</a>
-            </div>
+
+            <a href="${app.apk_url}" class="download-btn" target="_blank" rel="noopener noreferrer">APK İndir</a>
           </article>
         `;
-        container.innerHTML += cardHTML;
       });
     }
 
-    // Anlık Veritabanı Değişikliklerini Dinleme (Realtime)
+    // Anlık güncelleme (Realtime) dinleyicisi
     supabase
       .channel('public:AppDB')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'AppDB' }, () => {
-        uygulamalariYukle();
+        yukle();
       })
       .subscribe();
 
-    // Sayfa Yüklendiğinde İlk Çalıştırma
-    uygulamalariYukle();
+    // Sayfa açıldığında çalıştır
+    yukle();
   </script>
 </body>
 </html>

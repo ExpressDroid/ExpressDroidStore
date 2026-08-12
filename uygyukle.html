@@ -1,1 +1,163 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ExpressDroid - Uygulama Yükleme Paneli</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card-bg: #161b22;
+      --accent: #00e676;
+      --text: #f0f6fc;
+      --muted: #8b949e;
+      --border: #30363d;
+      --code-bg: #0d1117;
+      --danger: #f85149;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 25px; }
+    header h1 { color: var(--accent); font-size: 1.8rem; }
+    .form-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 25px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-size: 0.85rem; color: #c9d1d9; font-weight: 600; margin-bottom: 6px; }
+    input, textarea { width: 100%; padding: 10px 12px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.95rem; font-family: inherit; }
+    input[type="file"] { padding: 8px; cursor: pointer; }
+    input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 80px; }
+    .file-info { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+    .submit-btn { width: 100%; background: var(--accent); color: #000; text-align: center; padding: 12px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; font-size: 1rem; transition: opacity 0.2s; margin-top: 10px; }
+    .submit-btn:hover { opacity: 0.9; }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .status-msg { margin-top: 15px; text-align: center; font-size: 0.9rem; }
+    .success { color: var(--accent); }
+    .error { color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Uygulama Yükleme Paneli</h1>
+    </header>
 
+    <div class="form-card">
+      <form id="upload-form">
+        <div class="form-group">
+          <label>Uygulama Adı</label>
+          <input type="text" id="title" required placeholder="Örn: ExpressDroid Chat">
+        </div>
+
+        <div class="form-group">
+          <label>Resmî Geliştirici Adı</label>
+          <input type="text" id="developer_name" required placeholder="Örn: ExpressDroid Team">
+        </div>
+
+        <div class="form-group">
+          <label>Açıklama</label>
+          <textarea id="description" placeholder="Uygulama hakkında kısa bilgi..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Paket Adı (Package Name)</label>
+          <input type="text" id="package_name" required placeholder="Örn: com.expressdroid.app">
+        </div>
+
+        <div class="form-group">
+          <label>SHA-256 İmzası</label>
+          <input type="text" id="sha256_hash" placeholder="İsteğe bağlı SHA-256 kodu">
+        </div>
+
+        <div class="form-group">
+          <label>Logo / Fotoğraf Seç (Görsel Dosyası)</label>
+          <input type="file" id="icon_file" accept="image/*">
+          <div class="file-info">Cihazından bir logo veya görsel seçebilirsin.</div>
+        </div>
+
+        <div class="form-group">
+          <label>APK Dosyası Seç</label>
+          <input type="file" id="apk_file" accept=".apk" required>
+          <div class="file-info">Cihazından .apk uzantılı uygulama dosyasını seç.</div>
+        </div>
+
+        <button type="submit" id="submit-btn" class="submit-btn">Uygulamayı Yayınla</button>
+      </form>
+      <div id="status" class="status-msg"></div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://wdsfnygfsigugkaxpvka.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_imHucyg80qgs-Tj8pu52BA_FYBUGpZX';
+
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById('upload-file').addEventListener? null : null; // Safe
+
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const statusDiv = document.getElementById('status');
+      const submitBtn = document.getElementById('submit-btn');
+      
+      statusDiv.className = 'status-msg';
+      statusDiv.textContent = 'Dosyalar yükleniyor, lütfen bekleyin...';
+      submitBtn.disabled = true;
+
+      try {
+        const iconFile = document.getElementById('icon_file').files[0];
+        const apkFile = document.getElementById('apk_file').files[0];
+        const packageName = document.getElementById('package_name').value.trim();
+
+        let iconUrl = '';
+        let apkUrl = '';
+
+        // 1. Eğer Logo seçildiyse Supabase Storage'a yükle
+        if (iconFile) {
+          const iconPath = `icons/${Date.now()}_${iconFile.name}`;
+          const { error: iconError } = await db.storage.from('app-files').upload(iconPath, iconFile);
+          if (iconError) throw new Error('Logo yüklenemedi: ' + iconError.message);
+          
+          const { data: iconPublicData } = db.storage.from('app-files').getPublicUrl(iconPath);
+          iconUrl = iconPublicData.publicUrl;
+        }
+
+        // 2. APK Dosyasını Supabase Storage'a yükle
+        if (apkFile) {
+          const apkPath = `apks/${Date.now()}_${apkFile.name}`;
+          const { error: apkError } = await db.storage.from('app-files').upload(apkPath, apkFile);
+          if (apkError) throw new Error('APK yüklenemedi: ' + apkError.message);
+          
+          const { data: apkPublicData } = db.storage.from('app-files').getPublicUrl(apkPath);
+          apkUrl = apkPublicData.publicUrl;
+        }
+
+        // 3. Verileri Veritabanına Kaydet
+        const newApp = {
+          title: document.getElementById('title').value,
+          developer_name: document.getElementById('developer_name').value,
+          description: document.getElementById('description').value,
+          package_name: packageName,
+          sha256_hash: document.getElementById('sha256_hash').value,
+          icon_url: iconUrl,
+          apk_url: apkUrl
+        };
+
+        const { error: dbError } = await db.from('AppDB').insert([newApp]);
+        if (dbError) throw new Error('Veritabanı kayıt hatası: ' + dbError.message);
+
+        statusDiv.className = 'status-msg success';
+        statusDiv.textContent = 'Uygulama ve dosyalar başarıyla yayınlandı!';
+        document.getElementById('upload-form').reset();
+
+      } catch (err) {
+        statusDiv.className = 'status-msg error';
+        statusDiv.textContent = err.message;
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

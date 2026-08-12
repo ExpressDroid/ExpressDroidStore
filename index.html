@@ -4,10 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ExpressDroid Store</title>
-  
-  <!-- Supabase JS Kütüphanesi -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
     :root {
       --bg: #0f1117;
@@ -18,189 +15,55 @@
       --border: #30363d;
       --code-bg: #0d1117;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 30px;
-      padding: 10px 0;
-    }
-
-    header h1 {
-      color: var(--accent);
-      font-size: 2.2rem;
-      letter-spacing: 0.5px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 20px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: transform 0.2s, border-color 0.2s;
-    }
-
-    .card:hover {
-      transform: translateY(-3px);
-      border-color: var(--accent);
-    }
-
-    .card-top {
-      display: flex;
-      gap: 15px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .app-icon {
-      width: 60px;
-      height: 60px;
-      flex-shrink: 0;
-      border-radius: 12px;
-      background: var(--code-bg);
-      border: 1px solid var(--border);
-      object-fit: cover;
-    }
-
-    .app-title {
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #ffffff;
-    }
-
-    .dev-name {
-      font-size: 0.85rem;
-      color: var(--accent);
-      margin-top: 2px;
-    }
-
-    .app-desc {
-      font-size: 0.88rem;
-      color: #c9d1d9;
-      line-height: 1.4;
-      margin-bottom: 15px;
-      white-space: pre-line;
-    }
-
-    .meta-group {
-      background: var(--code-bg);
-      border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #21262d;
-    }
-
-    .meta-item {
-      font-size: 0.78rem;
-      color: var(--muted);
-      margin-bottom: 6px;
-      word-break: break-all;
-    }
-
-    .meta-item:last-child {
-      margin-bottom: 0;
-    }
-
-    .meta-label {
-      color: #c9d1d9;
-      font-weight: 600;
-      display: block;
-      margin-bottom: 2px;
-    }
-
-    .hash-code {
-      font-family: monospace;
-      font-size: 0.72rem;
-      color: #79c0ff;
-    }
-
-    .download-btn {
-      display: block;
-      background: var(--accent);
-      color: #000000;
-      text-align: center;
-      padding: 10px;
-      border-radius: 8px;
-      font-weight: bold;
-      text-decoration: none;
-      transition: opacity 0.2s;
-    }
-
-    .download-btn:hover {
-      opacity: 0.9;
-    }
-
-    .status-msg {
-      text-align: center;
-      padding: 40px;
-      color: var(--muted);
-      grid-column: 1 / -1;
-      font-size: 1rem;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 30px; }
+    header h1 { color: var(--accent); font-size: 2.2rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+    .card-top { display: flex; gap: 15px; align-items: center; margin-bottom: 12px; }
+    .app-icon { width: 60px; height: 60px; flex-shrink: 0; border-radius: 12px; background: var(--code-bg); border: 1px solid var(--border); object-fit: cover; }
+    .app-title { font-size: 1.2rem; font-weight: bold; color: #fff; }
+    .dev-name { font-size: 0.85rem; color: var(--accent); margin-top: 2px; }
+    .app-desc { font-size: 0.88rem; color: #c9d1d9; line-height: 1.4; margin-bottom: 15px; white-space: pre-line; }
+    .meta-group { background: var(--code-bg); border-radius: 8px; padding: 10px; margin-bottom: 15px; border: 1px solid #21262d; }
+    .meta-item { font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; word-break: break-all; }
+    .meta-item:last-child { margin-bottom: 0; }
+    .meta-label { color: #c9d1d9; font-weight: 600; display: block; margin-bottom: 2px; }
+    .hash-code { font-family: monospace; font-size: 0.72rem; color: #79c0ff; }
+    .download-btn { display: block; background: var(--accent); color: #000; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; text-decoration: none; transition: opacity 0.2s; }
+    .download-btn:hover { opacity: 0.9; }
+    .status-msg { text-align: center; padding: 40px; color: var(--muted); grid-column: 1 / -1; }
   </style>
 </head>
 <body>
-
   <div class="container">
     <header>
       <h1>ExpressDroid Store</h1>
     </header>
-
     <main id="app-list" class="grid">
       <div class="status-msg">Uygulamalar yükleniyor...</div>
     </main>
   </div>
 
   <script>
-    // Supabase Bağlantı Bilgileri
     const SUPABASE_URL = 'https://wdsfnygfsigugkaxpvka.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_imHucyg80qgs-Tj8pu52BA_FYBUGpZX';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indkc2Znygdmc2lndWdrYXhwdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NTM0NTIsImV4cCI6MjEwMjEyOTQ1Mn0.UNauLqKak3JI11RDn-DefGN7Lw8LIT-M7sV4P3sLHLo';
 
-    const supabase = supabase.createClient(https://wdsfnygfsigugkaxpvka.supabase.co, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indkc2ZueWdmc2lndWdrYXhwdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NTM0NTIsImV4cCI6MjEwMjEyOTQ1Mn0.UNauLqKak3JI11RDn-DefGN7Lw8LIT-M7sV4P3sLHLo);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Veritabanından Verileri Çeken Fonksiyon
     async function yukle() {
       const container = document.getElementById('app-list');
-      
-      const { data: apps, error } = await supabase
-        .from('AppDB')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data: apps, error } = await supabase.from('AppDB').select('*');
 
       if (error) {
-        console.error('Veri çekme hatası:', error);
-        container.innerHTML = `<div class="status-msg">Hata oluştu: ${error.message}</div>`;
+        container.innerHTML = `<div class="status-msg">Hata: ${error.message}</div>`;
         return;
       }
 
       if (!apps || apps.length === 0) {
-        container.innerHTML = '<div class="status-msg">Henüz yayınlanmış bir uygulama bulunmuyor.</div>';
+        container.innerHTML = '<div class="status-msg">Henüz uygulama bulunmuyor.</div>';
         return;
       }
 
@@ -213,9 +76,9 @@
           <article class="card">
             <div>
               <div class="card-top">
-                <img src="${iconUrl}" class="app-icon" alt="${app.title || 'Uygulama'} Logosu" />
+                <img src="${iconUrl}" class="app-icon" alt="Logo" />
                 <div>
-                  <h2 class="app-title">${app.title || 'İsimsiz Uygulama'}</h2>
+                  <h2 class="app-title">${app.title || 'İsimsiz'}</h2>
                   <div class="dev-name">Resmî Geliştirici Adı: ${app.developer_name || 'Bilinmiyor'}</div>
                 </div>
               </div>
@@ -240,15 +103,6 @@
       });
     }
 
-    // Anlık güncelleme (Realtime) dinleyicisi
-    supabase
-      .channel('public:AppDB')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'AppDB' }, () => {
-        yukle();
-      })
-      .subscribe();
-
-    // Sayfa açıldığında çalıştır
     yukle();
   </script>
 </body>

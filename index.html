@@ -51,11 +51,11 @@
     const SUPABASE_URL = 'https://wdsfnygfsigugkaxpvka.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indkc2Znygdmc2lndWdrYXhwdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NTM0NTIsImV4cCI6MjEwMjEyOTQ1Mn0.UNauLqKak3JI11RDn-DefGN7Lw8LIT-M7sV4P3sLHLo';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function yukle() {
       const container = document.getElementById('app-list');
-      const { data: apps, error } = await supabase.from('AppDB').select('*');
+      const { data: apps, error } = await db.from('AppDB').select('*');
 
       if (error) {
         container.innerHTML = `<div class="status-msg">Hata: ${error.message}</div>`;

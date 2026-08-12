@@ -94,8 +94,6 @@
 
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    document.getElementById('upload-file').addEventListener? null : null; // Safe
-
     document.getElementById('upload-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const statusDiv = document.getElementById('status');
@@ -113,7 +111,6 @@
         let iconUrl = '';
         let apkUrl = '';
 
-        // 1. Eğer Logo seçildiyse Supabase Storage'a yükle
         if (iconFile) {
           const iconPath = `icons/${Date.now()}_${iconFile.name}`;
           const { error: iconError } = await db.storage.from('app-files').upload(iconPath, iconFile);
@@ -123,7 +120,6 @@
           iconUrl = iconPublicData.publicUrl;
         }
 
-        // 2. APK Dosyasını Supabase Storage'a yükle
         if (apkFile) {
           const apkPath = `apks/${Date.now()}_${apkFile.name}`;
           const { error: apkError } = await db.storage.from('app-files').upload(apkPath, apkFile);
@@ -133,7 +129,6 @@
           apkUrl = apkPublicData.publicUrl;
         }
 
-        // 3. Verileri Veritabanına Kaydet
         const newApp = {
           title: document.getElementById('title').value,
           developer_name: document.getElementById('developer_name').value,

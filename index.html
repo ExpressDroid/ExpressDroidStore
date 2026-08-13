@@ -116,8 +116,8 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://wdsfnygfsigugkaxpvka.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indkc2ZueWdmc2lndWdrYXhwdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NTM0NTIsImV4cCI6MjEwMjEyOTQ1Mn0.UNauLqKak3JI11RDn-DefGN7Lw8LIT-M7sV4P3sLHLo';
+    const SUPABASE_URL = 'https://PROJE_ADRESIN.supabase.co';
+    const SUPABASE_ANON_KEY = 'SENIN_SUPABASE_ANON_KEY_DEGERIN';
 
     const { createClient } = supabase;
     const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -152,6 +152,8 @@
 
             for (const app of dbApps) {
                 const sanitizedName = app.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                
+                // Tek bucket: app-files içindeki texts klasöründen okunuyor
                 const textFilePath = `texts/${sanitizedName}.txt`;
 
                 let appDetails = {
@@ -164,7 +166,7 @@
 
                 try {
                     const { data: fileData, error: fileError } = await _supabase.storage
-                        .from('apks')
+                        .from('app-files')
                         .download(textFilePath);
 
                     if (!fileError && fileData) {
@@ -173,7 +175,7 @@
                         appDetails = { ...appDetails, ...parsed };
                     }
                 } catch (e) {
-                    console.warn(`${sanitizedName}.txt okunamadı, veritabanı verileri kullanılıyor.`);
+                    console.warn(`${sanitizedName}.txt okunamadı, varsayılan veriler kullanılıyor.`);
                 }
 
                 const card = document.createElement('div');

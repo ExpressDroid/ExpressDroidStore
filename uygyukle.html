@@ -85,14 +85,6 @@
         .submit-btn:hover {
             background: #00cc6a;
         }
-        .danger-btn {
-            background: #ff4d4d;
-            color: #fff;
-            margin-top: 10px;
-        }
-        .danger-btn:hover {
-            background: #cc3939;
-        }
         #status {
             text-align: center;
             margin-top: 15px;
@@ -151,7 +143,6 @@
 <div class="panel-box">
     <h2>ExpressDroid Yönetim Paneli</h2>
     
-    <!-- Yükleme Formu -->
     <form id="uploadForm">
         <div class="field">
             <label for="appName">Uygulama Adı</label>
@@ -162,6 +153,10 @@
             <textarea id="appDesc" required></textarea>
         </div>
         <div class="field">
+            <label for="packageName">Paket Adı (Package Name)</label>
+            <input type="text" id="packageName" placeholder="com.ornek.app" required>
+        </div>
+        <div class="field">
             <label for="appIconFile">Uygulama İkonu (Görsel)</label>
             <input type="file" id="appIconFile" accept="image/*" required>
         </div>
@@ -170,15 +165,14 @@
             <input type="file" id="appApkFile" accept=".apk" required>
         </div>
         <div class="field">
-            <label for="appSha">SHA-256 (Opsiyonel)</label>
-            <input type="text" id="appSha">
+            <label for="appSha">SHA-256</label>
+            <input type="text" id="appSha" required>
         </div>
-        <button type="submit" class="submit-btn">Dosyaları Yükle ve Kaydet</button>
+        <button type="submit" class="submit-btn">Dosyaları ve Texti Yükle</button>
     </form>
 
     <hr class="section-divider">
 
-    <!-- Uygulama Kaldırma Bölümü -->
     <h3 style="font-size: 16px; color: #9494b8; margin-bottom: 10px;">Yüklü Uygulamalar (Kaldır)</h3>
     <div id="appListContainer" class="app-list">
         <p style="font-size: 13px; color: #666; text-align: center;">Yüklü uygulama bulunamadı.</p>
@@ -202,7 +196,6 @@
         }
     });
 
-    // LocalStorage'den yüklenen uygulamaları listele
     function loadLocalApps() {
         const container = document.getElementById('appListContainer');
         const savedApps = JSON.parse(localStorage.getItem('expressdroid_uploaded_apps') || '[]');
@@ -221,18 +214,18 @@
                     <span class="app-name">${app.name}</span>
                     <span class="app-id">ID: ${app.id}</span>
                 </div>
-                <button class="delete-btn" onclick="deleteApp('${app.id}')">Kaldır</button>
+                <button class="delete-btn" onclick="deleteApp('${app.id}', '${app.textFileName}')">Kaldır</button>
             `;
             container.appendChild(item);
         });
     }
 
-    // Uygulama Ekleme
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const name = document.getElementById('appName').value;
         const description = document.getElementById('appDesc').value;
+        const packageName = document.getElementById('packageName').value;
         const iconFile = document.getElementById('appIconFile').files[0];
         const apkFile = document.getElementById('appApkFile').files[0];
         const sha256 = document.getElementById('appSha').value;
@@ -245,21 +238,36 @@
         }
 
         status.style.color = '#ffa500';
-        status.innerText = 'Dosyalar yükleniyor...';
+        status.innerText = 'Dosyalar ve text hazırlanıyor...';
 
         try {
+            // 1. Text dosyasını oluştur ve texts/ klasörüne yükle
+            const textContent = `[AppName]=${name}\n[AppDesc]=${description}\n[PackageName]=${packageName}\n[SHA256]=${sha256}`;
+            const textBlob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+            
+            // Dosya adını güvenli hale getir (boşlukları tire yap vb.)
+            const sanitizedName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            const textFileName = `texts/${sanitizedName}.txt`;
+
+            const { error: textError } = await _supabase.storage
+                .from('apks') // Veya hangi bucket'ı kullanıyorsan (genelde texts bucket'ı da olabilir, apks içinde texts klasörü de açabilirsin)
+                .upload(textFileName, textBlob, { upsert: true });
+
+            if (textError) throw new Error('Text dosyası yüklenemedi: ' + textError.message);
+
+            // 2. İkonu Storage'a yükle
             const iconFileName = Date.now() + '_' + iconFile.name;
             const { error: iconError } = await _supabase.storage.from('icons').upload(iconFileName, iconFile);
             if (iconError) throw new Error('İkon yüklenemedi: ' + iconError.message);
-
             const { data: iconData } = _supabase.storage.from('icons').getPublicUrl(iconFileName);
 
+            // 3. APK'yı Storage'a yükle
             const apkFileName = Date.now() + '_' + apkFile.name;
             const { error: apkError } = await _supabase.storage.from('apks').upload(apkFileName, apkFile);
             if (apkError) throw new Error('APK yüklenemedi: ' + apkError.message);
-
             const { data: apkData } = _supabase.storage.from('apks').getPublicUrl(apkFileName);
 
+            // 4. Veritabanına kaydet
             status.innerText = 'Veritabanına kaydediliyor...';
             const { data: insertedData, error: dbError } = await _supabase
                 .from('AppDB')
@@ -278,12 +286,12 @@
             if (insertedData && insertedData.length > 0) {
                 const newApp = insertedData[0];
                 const savedApps = JSON.parse(localStorage.getItem('expressdroid_uploaded_apps') || '[]');
-                savedApps.push({ id: newApp.id, name: newApp.name });
+                savedApps.push({ id: newApp.id, name: newApp.name, textFileName: textFileName });
                 localStorage.setItem('expressdroid_uploaded_apps', JSON.stringify(savedApps));
             }
 
             status.style.color = '#00ff88';
-            status.innerText = 'Uygulama başarıyla eklendi ve kaydedildi!';
+            status.innerText = 'Uygulama dosyası ve diğer dosyalar başarıyla yüklendi!';
             document.getElementById('uploadForm').reset();
             loadLocalApps();
 
@@ -293,13 +301,13 @@
         }
     });
 
-    // Uygulama Kaldırma (Veritabanından ve LocalStorage'den siler)
-    window.deleteApp = async function(id) {
+    window.deleteApp = async function(id, textFileName) {
         const status = document.getElementById('status');
         status.style.color = '#ffa500';
-        status.innerText = 'Uygulama kaldırılıyor...';
+        status.innerText = 'Uygulama ve text dosyası kaldırılıyor...';
 
         try {
+            // Veritabanından sil
             const { error } = await _supabase
                 .from('AppDB')
                 .delete()
@@ -307,13 +315,18 @@
 
             if (error) throw new Error('Silme hatası: ' + error.message);
 
+            // Storage'dan texts/ altındaki dosyayı sil
+            if (textFileName) {
+                await _supabase.storage.from('apks').remove([textFileName]);
+            }
+
             // LocalStorage'den çıkar
             let savedApps = JSON.parse(localStorage.getItem('expressdroid_uploaded_apps') || '[]');
             savedApps = savedApps.filter(app => app.id != id);
             localStorage.setItem('expressdroid_uploaded_apps', JSON.stringify(savedApps));
 
             status.style.color = '#00ff88';
-            status.innerText = 'Uygulama başarıyla kaldırıldı!';
+            status.innerText = 'Uygulama ve ilgili text dosyası başarıyla kaldırıldı!';
             loadLocalApps();
         } catch (err) {
             status.style.color = '#ff4d4d';
@@ -321,7 +334,6 @@
         }
     };
 
-    // Sayfa açıldığında listedeki uygulamaları yükle
     loadLocalApps();
 </script>
 

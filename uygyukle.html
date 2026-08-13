@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ExpressDroid - Uygulama Yükleme ve Yönetim Paneli</title>
+    <title>ExpressDroid - Yönetim Paneli</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -172,7 +172,7 @@
             <label for="appSha">SHA-256</label>
             <input type="text" id="appSha" required>
         </div>
-        <button type="submit" class="submit-btn">Dosyaları ve Texti Yükle</button>
+        <button type="submit" class="submit-btn">Dosyaları Yükle ve Kaydet</button>
     </form>
 
     <hr class="section-divider">
@@ -186,8 +186,8 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://wdsfnygfsigugkaxpvka.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indkc2ZueWdmc2lndWdrYXhwdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NTM0NTIsImV4cCI6MjEwMjEyOTQ1Mn0.UNauLqKak3JI11RDn-DefGN7Lw8LIT-M7sV4P3sLHLo';
+    const SUPABASE_URL = 'https://PROJE_ADRESIN.supabase.co';
+    const SUPABASE_ANON_KEY = 'SENIN_SUPABASE_ANON_KEY_DEGERIN';
     const GIZLI_TOKEN = '&%&%&%&/(/(&%&%&%';
 
     const { createClient } = supabase;
@@ -243,10 +243,10 @@
         }
 
         status.style.color = '#ffa500';
-        status.innerText = 'Dosyalar ve text hazırlanıyor...';
+        status.innerText = 'Dosyalar yükleniyor...';
 
         try {
-            // 1. Text dosyasını oluştur ve texts/ klasörüne yükle ([DevName] eklendi)
+            // 1. Text dosyasını hazırlayıp app-files bucket'ının 'texts/' klasörüne yükle
             const textContent = `[AppName]=${name}\n[DevName]=${devName}\n[AppDesc]=${description}\n[PackageName]=${packageName}\n[SHA256]=${sha256}`;
             const textBlob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
             
@@ -254,22 +254,34 @@
             const textFileName = `texts/${sanitizedName}.txt`;
 
             const { error: textError } = await _supabase.storage
-                .from('apks')
+                .from('app-files')
                 .upload(textFileName, textBlob, { upsert: true });
 
             if (textError) throw new Error('Text dosyası yüklenemedi: ' + textError.message);
 
-            // 2. İkonu Storage'a yükle
-            const iconFileName = Date.now() + '_' + iconFile.name;
-            const { error: iconError } = await _supabase.storage.from('icons').upload(iconFileName, iconFile);
-            if (iconError) throw new Error('İkon yüklenemedi: ' + iconError.message);
-            const { data: iconData } = _supabase.storage.from('icons').getPublicUrl(iconFileName);
+            // 2. İkonu app-files bucket'ının 'icons/' klasörüne yükle
+            const iconPath = `icons/${Date.now()}_${iconFile.name}`;
+            const { error: iconError } = await _supabase.storage
+                .from('app-files')
+                .upload(iconPath, iconFile);
 
-            // 3. APK'yı Storage'a yükle
-            const apkFileName = Date.now() + '_' + apkFile.name;
-            const { error: apkError } = await _supabase.storage.from('apks').upload(apkFileName, apkFile);
+            if (iconError) throw new Error('İkon yüklenemedi: ' + iconError.message);
+            
+            const { data: iconData } = _supabase.storage
+                .from('app-files')
+                .getPublicUrl(iconPath);
+
+            // 3. APK'yı app-files bucket'ının 'apks/' klasörüne yükle
+            const apkPath = `apks/${Date.now()}_${apkFile.name}`;
+            const { error: apkError } = await _supabase.storage
+                .from('app-files')
+                .upload(apkPath, apkFile);
+
             if (apkError) throw new Error('APK yüklenemedi: ' + apkError.message);
-            const { data: apkData } = _supabase.storage.from('apks').getPublicUrl(apkFileName);
+
+            const { data: apkData } = _supabase.storage
+                .from('app-files')
+                .getPublicUrl(apkPath);
 
             // 4. Veritabanına kaydet
             status.innerText = 'Veritabanına kaydediliyor...';
@@ -286,6 +298,7 @@
 
             if (dbError) throw new Error('Veritabanı hatası: ' + dbError.message);
 
+            // LocalStorage'e kaydet
             if (insertedData && insertedData.length > 0) {
                 const newApp = insertedData[0];
                 const savedApps = JSON.parse(localStorage.getItem('expressdroid_uploaded_apps') || '[]');
@@ -294,7 +307,7 @@
             }
 
             status.style.color = '#00ff88';
-            status.innerText = 'Uygulama, text dosyası ve dosyalar başarıyla yüklendi!';
+            status.innerText = 'Uygulama başarıyla eklendi!';
             document.getElementById('uploadForm').reset();
             loadLocalApps();
 
@@ -307,9 +320,10 @@
     window.deleteApp = async function(id, textFileName) {
         const status = document.getElementById('status');
         status.style.color = '#ffa500';
-        status.innerText = 'Uygulama ve text dosyası kaldırılıyor...';
+        status.innerText = 'Uygulama kaldırılıyor...';
 
         try {
+            // Veritabanından sil
             const { error } = await _supabase
                 .from('AppDB')
                 .delete()
@@ -317,16 +331,18 @@
 
             if (error) throw new Error('Silme hatası: ' + error.message);
 
+            // app-files içindeki texts/ klasöründe bulunan ilgili .txt dosyasını sil
             if (textFileName) {
-                await _supabase.storage.from('apks').remove([textFileName]);
+                await _supabase.storage.from('app-files').remove([textFileName]);
             }
 
+            // LocalStorage'den temizle
             let savedApps = JSON.parse(localStorage.getItem('expressdroid_uploaded_apps') || '[]');
             savedApps = savedApps.filter(app => app.id != id);
             localStorage.setItem('expressdroid_uploaded_apps', JSON.stringify(savedApps));
 
             status.style.color = '#00ff88';
-            status.innerText = 'Uygulama ve ilgili text dosyası başarıyla kaldırıldı!';
+            status.innerText = 'Uygulama başarıyla kaldırıldı!';
             loadLocalApps();
         } catch (err) {
             status.style.color = '#ff4d4d';

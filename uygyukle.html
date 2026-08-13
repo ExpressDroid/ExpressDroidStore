@@ -36,7 +36,6 @@
             margin-bottom: 25px;
             font-size: 22px;
             font-weight: 600;
-            letter-spacing: 0.5px;
         }
         .field {
             margin-bottom: 20px;
@@ -48,7 +47,7 @@
             font-size: 13px;
             font-weight: 500;
         }
-        input, textarea {
+        input[type="text"], textarea, input[type="file"] {
             width: 100%;
             padding: 12px 15px;
             border: 1px solid #2e2e48;
@@ -56,7 +55,10 @@
             background-color: #0d0d14;
             color: #fff;
             font-size: 14px;
-            transition: all 0.2s ease;
+        }
+        input[type="file"] {
+            padding: 9px;
+            cursor: pointer;
         }
         input:focus, textarea:focus {
             outline: none;
@@ -65,7 +67,7 @@
         }
         textarea {
             resize: vertical;
-            min-height: 90px;
+            min-height: 80px;
         }
         .submit-btn {
             width: 100%;
@@ -77,14 +79,11 @@
             cursor: pointer;
             font-weight: 700;
             font-size: 15px;
-            transition: background 0.2s, transform 0.1s;
+            transition: background 0.2s;
             margin-top: 5px;
         }
         .submit-btn:hover {
             background: #00cc6a;
-        }
-        .submit-btn:active {
-            transform: scale(0.99);
         }
         #status {
             text-align: center;
@@ -97,29 +96,29 @@
 <body>
 
 <div class="panel-box">
-    <h2>ExpressDroid Yükleme Paneli</h2>
+    <h2>ExpressDroid Dosya Yükleme Paneli</h2>
     <form id="uploadForm">
         <div class="field">
             <label for="appName">Uygulama Adı</label>
-            <input type="text" id="appName" placeholder="" required>
+            <input type="text" id="appName" required>
         </div>
         <div class="field">
             <label for="appDesc">Açıklama</label>
-            <textarea id="appDesc" placeholder="" required></textarea>
+            <textarea id="appDesc" required></textarea>
         </div>
         <div class="field">
-            <label for="appIcon">Logo / İkon URL</label>
-            <input type="text" id="appIcon" placeholder="" required>
+            <label for="appIconFile">Uygulama İkonu (Görsel)</label>
+            <input type="file" id="appIconFile" accept="image/*" required>
         </div>
         <div class="field">
-            <label for="appUrl">APK İndirme Linki / Paket Adı</label>
-            <input type="text" id="appUrl" placeholder="" required>
+            <label for="appApkFile">APK Dosyası</label>
+            <input type="file" id="appApkFile" accept=".apk" required>
         </div>
         <div class="field">
             <label for="appSha">SHA-256 (Opsiyonel)</label>
-            <input type="text" id="appSha" placeholder="">
+            <input type="text" id="appSha">
         </div>
-        <button type="submit" class="submit-btn">Uygulamayı Yükle</button>
+        <button type="submit" class="submit-btn">Dosyaları Yükle ve Kaydet</button>
     </form>
     <p id="status"></p>
 </div>
@@ -144,31 +143,66 @@
         
         const name = document.getElementById('appName').value;
         const description = document.getElementById('appDesc').value;
-        const icon = document.getElementById('appIcon').value;
-        const url = document.getElementById('appUrl').value;
+        const iconFile = document.getElementById('appIconFile').files[0];
+        const apkFile = document.getElementById('appApkFile').files[0];
         const sha256 = document.getElementById('appSha').value;
         const status = document.getElementById('status');
 
-        status.style.color = '#ffa500';
-        status.innerText = 'Yükleniyor...';
-
-        const { data, error } = await _supabase
-            .from('AppDB')
-            .insert([{ 
-                name: name, 
-                description: description, 
-                icon: icon, 
-                url: url, 
-                sha256: sha256 
-            }]);
-
-        if (error) {
+        if (!iconFile || !apkFile) {
             status.style.color = '#ff4d4d';
-            status.innerText = 'Hata: ' + error.message;
-        } else {
+            status.innerText = 'Lütfen hem ikon hem de APK dosyası seçin!';
+            return;
+        }
+
+        status.style.color = '#ffa500';
+        status.innerText = 'Dosyalar yükleniyor...';
+
+        try {
+            // 1. İkonu Storage'a yükle
+            const iconFileName = Date.now() + '_' + iconFile.name;
+            const { error: iconError } = await _supabase.storage
+                .from('icons')
+                .upload(iconFileName, iconFile);
+
+            if (iconError) throw new Error('İkon yüklenemedi: ' + iconError.message);
+
+            const { data: iconData } = _supabase.storage
+                .from('icons')
+                .getPublicUrl(iconFileName);
+
+            // 2. APK'yı Storage'a yükle
+            const apkFileName = Date.now() + '_' + apkFile.name;
+            const { error: apkError } = await _supabase.storage
+                .from('apks')
+                .upload(apkFileName, apkFile);
+
+            if (apkError) throw new Error('APK yüklenemedi: ' + apkError.message);
+
+            const { data: apkData } = _supabase.storage
+                .from('apks')
+                .getPublicUrl(apkFileName);
+
+            // 3. Veritabanına kaydet
+            status.innerText = 'Veritabanına kaydediliyor...';
+            const { error: dbError } = await _supabase
+                .from('AppDB')
+                .insert([{ 
+                    name: name, 
+                    description: description, 
+                    icon: iconData.publicUrl, 
+                    url: apkData.publicUrl, 
+                    sha256: sha256 
+                }]);
+
+            if (dbError) throw new Error('Veritabanı hatası: ' + dbError.message);
+
             status.style.color = '#00ff88';
-            status.innerText = 'Uygulama başarıyla eklendi!';
+            status.innerText = 'Uygulama ve dosyalar başarıyla yüklendi!';
             document.getElementById('uploadForm').reset();
+
+        } catch (err) {
+            status.style.color = '#ff4d4d';
+            status.innerText = 'Hata: ' + err.message;
         }
     });
 </script>

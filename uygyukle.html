@@ -3,86 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ExpressDroid - Uygulama Yükle</title>
+    <title>ExpressDroid - Uygulama Yükleme Paneli</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
         body {
-            background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
-            color: #e0e0e0;
+            background-color: #0b0b0f;
+            color: #f1f1f1;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
         }
-        .container {
-            background: #1e1e2f;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+        .panel-box {
+            background: #161622;
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
             width: 100%;
-            max-width: 480px;
-            border: 1px solid #2d2d44;
+            max-width: 500px;
+            border: 1px solid #27273d;
         }
         h2 {
             text-align: center;
             color: #00ff88;
-            margin-bottom: 24px;
-            font-size: 24px;
+            margin-bottom: 25px;
+            font-size: 22px;
+            font-weight: 600;
             letter-spacing: 0.5px;
         }
-        .form-group {
-            margin-bottom: 16px;
+        .field {
+            margin-bottom: 20px;
         }
         label {
             display: block;
-            margin-bottom: 6px;
-            color: #b0b0c3;
-            font-size: 14px;
+            margin-bottom: 8px;
+            color: #9494b8;
+            font-size: 13px;
+            font-weight: 500;
         }
         input, textarea {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #3a3a5c;
-            border-radius: 6px;
-            background-color: #12121a;
+            padding: 12px 15px;
+            border: 1px solid #2e2e48;
+            border-radius: 8px;
+            background-color: #0d0d14;
             color: #fff;
             font-size: 14px;
-            transition: border-color 0.3s;
+            transition: all 0.2s ease;
         }
         input:focus, textarea:focus {
             outline: none;
             border-color: #00ff88;
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
         }
-        button {
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+        .submit-btn {
             width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #00ff88, #00b359);
-            color: #121212;
+            padding: 13px;
+            background: #00ff88;
+            color: #0b0b0f;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            transition: opacity 0.2s, transform 0.1s;
-            margin-top: 10px;
+            font-weight: 700;
+            font-size: 15px;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 5px;
         }
-        button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+        .submit-btn:hover {
+            background: #00cc6a;
         }
-        button:active {
-            transform: translateY(0);
+        .submit-btn:active {
+            transform: scale(0.99);
         }
         #status {
             text-align: center;
-            margin-top: 15px;
+            margin-top: 18px;
             font-size: 14px;
             font-weight: 500;
         }
@@ -90,30 +96,30 @@
 </head>
 <body>
 
-<div class="container">
-    <h2>ExpressDroid Panel</h2>
+<div class="panel-box">
+    <h2>ExpressDroid Yükleme Paneli</h2>
     <form id="uploadForm">
-        <div class="form-group">
+        <div class="field">
             <label for="appName">Uygulama Adı</label>
-            <input type="text" id="appName" placeholder="Uygulama adını girin..." required>
+            <input type="text" id="appName" placeholder="" required>
         </div>
-        <div class="form-group">
+        <div class="field">
             <label for="appDesc">Açıklama</label>
-            <textarea id="appDesc" placeholder="Uçtan uca açıklama yazın..." rows="3" required></textarea>
+            <textarea id="appDesc" placeholder="" required></textarea>
         </div>
-        <div class="form-group">
+        <div class="field">
             <label for="appIcon">Logo / İkon URL</label>
-            <input type="text" id="appIcon" placeholder="https://... (İkon bağlantısı)" required>
+            <input type="text" id="appIcon" placeholder="" required>
         </div>
-        <div class="form-group">
-            <label for="appUrl">APK İndirme Linki</label>
-            <input type="text" id="appUrl" placeholder="https://... (APK bağlantısı)" required>
+        <div class="field">
+            <label for="appUrl">APK İndirme Linki / Paket Adı</label>
+            <input type="text" id="appUrl" placeholder="" required>
         </div>
-        <div class="form-group">
+        <div class="field">
             <label for="appSha">SHA-256 (Opsiyonel)</label>
-            <input type="text" id="appSha" placeholder="Dosya hash değeri...">
+            <input type="text" id="appSha" placeholder="">
         </div>
-        <button type="submit">Uygulamayı Yükle</button>
+        <button type="submit" class="submit-btn">Uygulamayı Yükle</button>
     </form>
     <p id="status"></p>
 </div>
@@ -143,7 +149,7 @@
         const sha256 = document.getElementById('appSha').value;
         const status = document.getElementById('status');
 
-        status.style.color = '#ffaa00';
+        status.style.color = '#ffa500';
         status.innerText = 'Yükleniyor...';
 
         const { data, error } = await _supabase
@@ -157,7 +163,7 @@
             }]);
 
         if (error) {
-            status.style.color = '#ff4444';
+            status.style.color = '#ff4d4d';
             status.innerText = 'Hata: ' + error.message;
         } else {
             status.style.color = '#00ff88';

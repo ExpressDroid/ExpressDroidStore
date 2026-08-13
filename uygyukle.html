@@ -19,6 +19,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            padding: 20px;
         }
         .container {
             background: #1e1e2f;
@@ -26,7 +27,7 @@
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.6);
             width: 100%;
-            max-width: 450px;
+            max-width: 480px;
             border: 1px solid #2d2d44;
         }
         h2 {
@@ -37,7 +38,7 @@
             letter-spacing: 0.5px;
         }
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
         label {
             display: block;
@@ -94,15 +95,23 @@
     <form id="uploadForm">
         <div class="form-group">
             <label for="appName">Uygulama Adı</label>
-            <input type="text" id="appName" placeholder="Örn: ExpressApp" required>
+            <input type="text" id="appName" placeholder="Uygulama adını girin..." required>
         </div>
         <div class="form-group">
             <label for="appDesc">Açıklama</label>
-            <textarea id="appDesc" placeholder="Uygulama hakkında kısa bilgi..." rows="4" required></textarea>
+            <textarea id="appDesc" placeholder="Uçtan uca açıklama yazın..." rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="appIcon">Logo / İkon URL</label>
+            <input type="text" id="appIcon" placeholder="https://... (İkon bağlantısı)" required>
         </div>
         <div class="form-group">
             <label for="appUrl">APK İndirme Linki</label>
-            <input type="text" id="appUrl" placeholder="https://..." required>
+            <input type="text" id="appUrl" placeholder="https://... (APK bağlantısı)" required>
+        </div>
+        <div class="form-group">
+            <label for="appSha">SHA-256 (Opsiyonel)</label>
+            <input type="text" id="appSha" placeholder="Dosya hash değeri...">
         </div>
         <button type="submit">Uygulamayı Yükle</button>
     </form>
@@ -129,7 +138,9 @@
         
         const name = document.getElementById('appName').value;
         const description = document.getElementById('appDesc').value;
+        const icon = document.getElementById('appIcon').value;
         const url = document.getElementById('appUrl').value;
+        const sha256 = document.getElementById('appSha').value;
         const status = document.getElementById('status');
 
         status.style.color = '#ffaa00';
@@ -137,7 +148,13 @@
 
         const { data, error } = await _supabase
             .from('AppDB')
-            .insert([{ name: name, description: description, url: url }]);
+            .insert([{ 
+                name: name, 
+                description: description, 
+                icon: icon, 
+                url: url, 
+                sha256: sha256 
+            }]);
 
         if (error) {
             status.style.color = '#ff4444';

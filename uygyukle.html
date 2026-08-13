@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ExpressDroid - Uygulama Yükleme Paneli</title>
+    <title>ExpressDroid - Uygulama Yükleme ve Yönetim Paneli</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -23,33 +23,33 @@
         }
         .panel-box {
             background: #161622;
-            padding: 35px;
+            padding: 30px;
             border-radius: 16px;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
             width: 100%;
-            max-width: 500px;
+            max-width: 550px;
             border: 1px solid #27273d;
         }
         h2 {
             text-align: center;
             color: #00ff88;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             font-size: 22px;
             font-weight: 600;
         }
         .field {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #9494b8;
             font-size: 13px;
             font-weight: 500;
         }
         input[type="text"], textarea, input[type="file"] {
             width: 100%;
-            padding: 12px 15px;
+            padding: 10px 14px;
             border: 1px solid #2e2e48;
             border-radius: 8px;
             background-color: #0d0d14;
@@ -57,7 +57,7 @@
             font-size: 14px;
         }
         input[type="file"] {
-            padding: 9px;
+            padding: 8px;
             cursor: pointer;
         }
         input:focus, textarea:focus {
@@ -67,11 +67,11 @@
         }
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 70px;
         }
         .submit-btn {
             width: 100%;
-            padding: 13px;
+            padding: 12px;
             background: #00ff88;
             color: #0b0b0f;
             border: none;
@@ -85,18 +85,73 @@
         .submit-btn:hover {
             background: #00cc6a;
         }
+        .danger-btn {
+            background: #ff4d4d;
+            color: #fff;
+            margin-top: 10px;
+        }
+        .danger-btn:hover {
+            background: #cc3939;
+        }
         #status {
             text-align: center;
-            margin-top: 18px;
+            margin-top: 15px;
             font-size: 14px;
             font-weight: 500;
+        }
+        .section-divider {
+            margin: 25px 0 20px 0;
+            border: 0;
+            border-top: 1px solid #27273d;
+        }
+        .app-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .app-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0d0d14;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid #2e2e48;
+        }
+        .app-info span {
+            display: block;
+        }
+        .app-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 14px;
+        }
+        .app-id {
+            font-size: 11px;
+            color: #888;
+        }
+        .delete-btn {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .delete-btn:hover {
+            background: #cc3939;
         }
     </style>
 </head>
 <body>
 
 <div class="panel-box">
-    <h2>ExpressDroid Dosya Yükleme Paneli</h2>
+    <h2>ExpressDroid Yönetim Paneli</h2>
+    
+    <!-- Yükleme Formu -->
     <form id="uploadForm">
         <div class="field">
             <label for="appName">Uygulama Adı</label>
@@ -120,13 +175,22 @@
         </div>
         <button type="submit" class="submit-btn">Dosyaları Yükle ve Kaydet</button>
     </form>
+
+    <hr class="section-divider">
+
+    <!-- Uygulama Kaldırma Bölümü -->
+    <h3 style="font-size: 16px; color: #9494b8; margin-bottom: 10px;">Yüklü Uygulamalar (Kaldır)</h3>
+    <div id="appListContainer" class="app-list">
+        <p style="font-size: 13px; color: #666; text-align: center;">Yüklü uygulama bulunamadı.</p>
+    </div>
+
     <p id="status"></p>
 </div>
 
 <script>
     const SUPABASE_URL = 'SENIN_SUPABASE_URL_ADRESIN';
     const SUPABASE_ANON_KEY = 'SENIN_SUPABASE_ANON_KEY_DEGERIN';
-    const GIZLI_TOKEN = typeof process !== 'undefined' && process.env && process.env.SUPABASE_APP_TOKEN ? process.env.SUPABASE_APP_TOKEN : '&%&%&%&/(/(&%&%&%';
+    const GIZLI_TOKEN = '&%&%&%&/(/(&%&%&%';
 
     const { createClient } = supabase;
     const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -138,6 +202,32 @@
         }
     });
 
+    // LocalStorage'den yüklenen uygulamaları listele
+    function loadLocalApps() {
+        const container = document.getElementById('appListContainer');
+        const savedApps = JSON.parse(localStorage.getItem('expressdroid_uploaded_apps') || '[]');
+
+        if (savedApps.length === 0) {
+            container.innerHTML = '<p style="font-size: 13px; color: #666; text-align: center;">Yüklü uygulama bulunamadı.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        savedApps.forEach(app => {
+            const item = document.createElement('div');
+            item.className = 'app-item';
+            item.innerHTML = `
+                <div class="app-info">
+                    <span class="app-name">${app.name}</span>
+                    <span class="app-id">ID: ${app.id}</span>
+                </div>
+                <button class="delete-btn" onclick="deleteApp('${app.id}')">Kaldır</button>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    // Uygulama Ekleme
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -150,7 +240,7 @@
 
         if (!iconFile || !apkFile) {
             status.style.color = '#ff4d4d';
-            status.innerText = 'Lütfen hem ikon hem de APK dosyası seçin!';
+            status.innerText = 'Lütfen ikon ve APK dosyalarını seçin!';
             return;
         }
 
@@ -158,33 +248,20 @@
         status.innerText = 'Dosyalar yükleniyor...';
 
         try {
-            // 1. İkonu Storage'a yükle
             const iconFileName = Date.now() + '_' + iconFile.name;
-            const { error: iconError } = await _supabase.storage
-                .from('icons')
-                .upload(iconFileName, iconFile);
-
+            const { error: iconError } = await _supabase.storage.from('icons').upload(iconFileName, iconFile);
             if (iconError) throw new Error('İkon yüklenemedi: ' + iconError.message);
 
-            const { data: iconData } = _supabase.storage
-                .from('icons')
-                .getPublicUrl(iconFileName);
+            const { data: iconData } = _supabase.storage.from('icons').getPublicUrl(iconFileName);
 
-            // 2. APK'yı Storage'a yükle
             const apkFileName = Date.now() + '_' + apkFile.name;
-            const { error: apkError } = await _supabase.storage
-                .from('apks')
-                .upload(apkFileName, apkFile);
-
+            const { error: apkError } = await _supabase.storage.from('apks').upload(apkFileName, apkFile);
             if (apkError) throw new Error('APK yüklenemedi: ' + apkError.message);
 
-            const { data: apkData } = _supabase.storage
-                .from('apks')
-                .getPublicUrl(apkFileName);
+            const { data: apkData } = _supabase.storage.from('apks').getPublicUrl(apkFileName);
 
-            // 3. Veritabanına kaydet
             status.innerText = 'Veritabanına kaydediliyor...';
-            const { error: dbError } = await _supabase
+            const { data: insertedData, error: dbError } = await _supabase
                 .from('AppDB')
                 .insert([{ 
                     name: name, 
@@ -192,19 +269,60 @@
                     icon: iconData.publicUrl, 
                     url: apkData.publicUrl, 
                     sha256: sha256 
-                }]);
+                }])
+                .select();
 
             if (dbError) throw new Error('Veritabanı hatası: ' + dbError.message);
 
+            // LocalStorage'e kaydet
+            if (insertedData && insertedData.length > 0) {
+                const newApp = insertedData[0];
+                const savedApps = JSON.parse(localStorage.getItem('expressdroid_uploaded_apps') || '[]');
+                savedApps.push({ id: newApp.id, name: newApp.name });
+                localStorage.setItem('expressdroid_uploaded_apps', JSON.stringify(savedApps));
+            }
+
             status.style.color = '#00ff88';
-            status.innerText = 'Uygulama ve dosyalar başarıyla yüklendi!';
+            status.innerText = 'Uygulama başarıyla eklendi ve kaydedildi!';
             document.getElementById('uploadForm').reset();
+            loadLocalApps();
 
         } catch (err) {
             status.style.color = '#ff4d4d';
             status.innerText = 'Hata: ' + err.message;
         }
     });
+
+    // Uygulama Kaldırma (Veritabanından ve LocalStorage'den siler)
+    window.deleteApp = async function(id) {
+        const status = document.getElementById('status');
+        status.style.color = '#ffa500';
+        status.innerText = 'Uygulama kaldırılıyor...';
+
+        try {
+            const { error } = await _supabase
+                .from('AppDB')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw new Error('Silme hatası: ' + error.message);
+
+            // LocalStorage'den çıkar
+            let savedApps = JSON.parse(localStorage.getItem('expressdroid_uploaded_apps') || '[]');
+            savedApps = savedApps.filter(app => app.id != id);
+            localStorage.setItem('expressdroid_uploaded_apps', JSON.stringify(savedApps));
+
+            status.style.color = '#00ff88';
+            status.innerText = 'Uygulama başarıyla kaldırıldı!';
+            loadLocalApps();
+        } catch (err) {
+            status.style.color = '#ff4d4d';
+            status.innerText = 'Hata: ' + err.message;
+        }
+    };
+
+    // Sayfa açıldığında listedeki uygulamaları yükle
+    loadLocalApps();
 </script>
 
 </body>

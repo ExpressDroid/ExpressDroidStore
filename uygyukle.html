@@ -4,73 +4,115 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ExpressDroid - Uygulama Yükle</title>
-    <!-- Supabase JS Kütüphanesi -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
+            background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+            color: #e0e0e0;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            min-height: 100vh;
         }
         .container {
-            background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            background: #1e1e2f;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
+            border: 1px solid #2d2d44;
         }
         h2 {
             text-align: center;
-            color: #4CAF50;
+            color: #00ff88;
+            margin-bottom: 24px;
+            font-size: 24px;
+            letter-spacing: 0.5px;
         }
-        input, textarea, button {
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #b0b0c3;
+            font-size: 14px;
+        }
+        input, textarea {
             width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #333;
-            border-radius: 4px;
-            background-color: #2c2c2c;
+            padding: 12px;
+            border: 1px solid #3a3a5c;
+            border-radius: 6px;
+            background-color: #12121a;
             color: #fff;
-            box-sizing: border-box;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #00ff88;
         }
         button {
-            background-color: #4CAF50;
-            color: white;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #00ff88, #00b359);
+            color: #121212;
             border: none;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 16px;
+            transition: opacity 0.2s, transform 0.1s;
+            margin-top: 10px;
         }
         button:hover {
-            background-color: #45a049;
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        #status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Uygulama Yükle</h2>
+    <h2>ExpressDroid Panel</h2>
     <form id="uploadForm">
-        <input type="text" id="appName" placeholder="Uygulama Adı" required>
-        <textarea id="appDesc" placeholder="Uygulama Açıklaması" rows="4" required></textarea>
-        <input type="text" id="appUrl" placeholder="İndirme Linki (APK URL)" required>
-        <button type="submit">Yükle</button>
+        <div class="form-group">
+            <label for="appName">Uygulama Adı</label>
+            <input type="text" id="appName" placeholder="Örn: ExpressApp" required>
+        </div>
+        <div class="form-group">
+            <label for="appDesc">Açıklama</label>
+            <textarea id="appDesc" placeholder="Uygulama hakkında kısa bilgi..." rows="4" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="appUrl">APK İndirme Linki</label>
+            <input type="text" id="appUrl" placeholder="https://..." required>
+        </div>
+        <button type="submit">Uygulamayı Yükle</button>
     </form>
-    <p id="status" style="text-align: center;"></p>
+    <p id="status"></p>
 </div>
 
 <script>
-    // Vercel projelerinde Vite veya standart ortam değişkeni kullanımı
     const SUPABASE_URL = 'SENIN_SUPABASE_URL_ADRESIN';
     const SUPABASE_ANON_KEY = 'SENIN_SUPABASE_ANON_KEY_DEGERIN';
-    
-    // Vercel Environment Variable (Vite tabanlı ise import.meta.env, düz HTML ise build aşamasında inject edilir)
-    const GIZLI_TOKEN = typeof process !== 'undefined' && process.env ? process.env.SUPABASE_APP_TOKEN : '&%&%&%&/(/(&%&%&%';
+    const GIZLI_TOKEN = typeof process !== 'undefined' && process.env && process.env.SUPABASE_APP_TOKEN ? process.env.SUPABASE_APP_TOKEN : '&%&%&%&/(/(&%&%&%';
 
     const { createClient } = supabase;
     const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -90,7 +132,7 @@
         const url = document.getElementById('appUrl').value;
         const status = document.getElementById('status');
 
-        status.style.color = '#ff9800';
+        status.style.color = '#ffaa00';
         status.innerText = 'Yükleniyor...';
 
         const { data, error } = await _supabase
@@ -98,10 +140,10 @@
             .insert([{ name: name, description: description, url: url }]);
 
         if (error) {
-            status.style.color = '#f44336';
+            status.style.color = '#ff4444';
             status.innerText = 'Hata: ' + error.message;
         } else {
-            status.style.color = '#4CAF50';
+            status.style.color = '#00ff88';
             status.innerText = 'Uygulama başarıyla eklendi!';
             document.getElementById('uploadForm').reset();
         }
